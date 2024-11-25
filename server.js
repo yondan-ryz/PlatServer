@@ -14,6 +14,7 @@ const kendaraan = [
   { kode: "D", wilayah: "Bandung" },
   { kode: "B", wilayah: "Jakarta" },
   { kode: "N", wilayah: "Malang" },
+  { kode: "DK", wilayah: "Bali" },
 ];
 
 // Endpoint POST untuk mencari kendaraan berdasarkan kode
