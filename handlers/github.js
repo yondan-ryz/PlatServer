@@ -1,10 +1,10 @@
 const axios = require("axios");
 
 const GITHUB_API = "https://api.github.com";
-const OWNER = "your-username"; // Ganti dengan username GitHub Anda
-const REPO = "your-repository"; // Ganti dengan nama repository Anda
+const OWNER = "yondan-ryz"; // Ganti dengan username GitHub Anda
+const REPO = "PlatServer"; // Ganti dengan nama repository Anda
 const FILE_PATH = "data.json"; // Path file JSON di repository
-const TOKEN = "your-github-token"; // Token GitHub Anda
+const TOKEN = "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"; // Token GitHub Anda
 
 // Baca file JSON
 async function readFile(req, res) {
