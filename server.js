@@ -1,18 +1,23 @@
 const express = require("express");
-const { readFile, writeFile, deleteFile } = require("./handlers/github");
+const { readFile, writeFile, deleteFile } = require("./handlers/github"); // Fungsi yang telah Anda buat
+const bodyParser = require("body-parser");
 
 const app = express();
-app.use(express.json());
 
-// Endpoint API
-app.get("/api/read", readFile);
-app.post("/api/write", writeFile);
-app.delete("/api/delete", deleteFile);
+// Middleware untuk memparsing JSON request body
+app.use(bodyParser.json());
 
-// Jalankan server (lokal testing)
+// Rute API untuk membaca file JSON
+app.get("/api/data", readFile);
+
+// Rute API untuk menulis/merubah file JSON
+app.post("/api/data", writeFile);
+
+// Rute API untuk menghapus file JSON
+app.delete("/api/data", deleteFile);
+
+// Jalankan server pada port tertentu (misalnya 3000)
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server is running on http://localhost:${PORT}`);
 });
-
-module.exports = app; // Untuk deploy ke Vercel
