@@ -9,6 +9,11 @@
       "id": 103,
       "name": "Tablet",
       "price": 600
+    },
+    {
+      "id": 104,
+      "name": "W",
+      "price": null
     }
   ]
 }
