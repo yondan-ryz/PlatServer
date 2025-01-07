@@ -4,6 +4,11 @@
       "id": 1,
       "name": "Smartphone",
       "price": 800
+    },
+    {
+      "id": 1,
+      "name": "dsdsd",
+      "price": null
     }
   ]
 }
