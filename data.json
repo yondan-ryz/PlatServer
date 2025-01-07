@@ -9,6 +9,11 @@
       "id": 2,
       "name": "Hape",
       "price": "10005"
+    },
+    {
+      "id": 3,
+      "name": "we",
+      "price": "300"
     }
   ]
 }
