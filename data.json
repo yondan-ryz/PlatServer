@@ -2,8 +2,8 @@
   "products": [
     {
       "id": 1,
-      "name": "Hape Bata",
-      "price": 1000000
+      "name": "2",
+      "price": "1000"
     },
     {
       "id": 2,
