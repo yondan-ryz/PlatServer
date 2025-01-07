@@ -2,8 +2,9 @@
   "products": [
     {
       "id": 1,
-      "name": "2",
-      "price": "1000"
+      "name": "dsads",
+      "price": "dsds",
+      "base64Text": "sdsf"
     },
     {
       "id": 2,
