@@ -1,17 +1,12 @@
 {
   "products": [
     {
-      "id": 102,
+      "id": 1,
       "name": "Smartphone",
       "price": 800
     },
     {
-      "id": 103,
-      "name": "Tablet",
-      "price": 600
-    },
-    {
-      "id": 104,
+      "id": 2,
       "name": "W",
       "price": null
     }
