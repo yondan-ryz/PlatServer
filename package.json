@@ -2,9 +2,9 @@
   "name": "github-api-server",
   "version": "1.0.0",
   "description": "Server sederhana untuk mengakses API GitHub menggunakan token dengan dukungan CORS",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node server.js"
   },
   "keywords": [
     "express",
