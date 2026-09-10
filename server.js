@@ -1,62 +1,119 @@
-app.all('/api/qc/rfu/Param.id', async (req, res, next) => {
+const express = require('express');
+
+const app = express();
+
+app.use(express.json({ limit: '10mb' }));
+
+
+// ============================================================
+// QC RFU
+// ============================================================
+
+app.all('/core/api/qc/rfu/Param.id', async (req, res) => {
   try {
+
     const targetUrl = process.env.QC_RFU_URL;
 
     if (!targetUrl) {
-      return res.status(500).json({
-        success: false,
-        message: 'QC_RFU_URL is not configured'
-      });
+      return res.status(500).send(
+        JSON.stringify({
+          error: 'QC_RFU_URL is not configured'
+        })
+      );
     }
 
-    const query = new URLSearchParams(req.query).toString();
 
-    const url = query
-      ? targetUrl + '?' + query
-      : targetUrl;
+    // Query
+    const queryString =
+      new URLSearchParams(req.query).toString();
 
+    const requestUrl =
+      queryString
+        ? targetUrl + '?' + queryString
+        : targetUrl;
+
+
+    // Header
     const headers = {};
 
-    if (req.headers['content-type']) {
-      headers['Content-Type'] = req.headers['content-type'];
-    }
+    Object.keys(req.headers).forEach(function (key) {
 
-    if (req.headers.authorization) {
-      headers['Authorization'] = req.headers.authorization;
-    }
-
-    if (req.headers.accept) {
-      headers['Accept'] = req.headers.accept;
-    }
-
-    let body;
-
-    if (req.method !== 'GET' && req.method !== 'HEAD') {
-      if (req.body !== undefined) {
-        body = JSON.stringify(req.body);
+      if (
+        key.toLowerCase() !== 'host' &&
+        key.toLowerCase() !== 'content-length'
+      ) {
+        headers[key] = req.headers[key];
       }
+
+    });
+
+
+    // Body
+    let body = undefined;
+
+    if (
+      req.method !== 'GET' &&
+      req.method !== 'HEAD'
+    ) {
+      body = JSON.stringify(req.body);
     }
 
-    const response = await fetch(url, {
+
+    // Request
+    const response = await fetch(requestUrl, {
       method: req.method,
       headers: headers,
       body: body
     });
 
-    const responseText = await response.text();
 
-    // Response dibuat escaped
-    const escapedResponse = JSON.stringify(responseText);
+    // Ambil response
+    const responseText =
+      await response.text();
 
+
+    // Escape response
+    const escapedResponse =
+      JSON.stringify(responseText);
+
+
+    // Return
     res.status(response.status);
+
     res.setHeader(
       'Content-Type',
       'application/json; charset=utf-8'
     );
 
-    return res.send(escapedResponse);
+    return res.send(
+      escapedResponse
+    );
 
-  } catch (e) {
-    return next(e);
+  } catch (error) {
+
+    console.error(error);
+
+    return res.status(500).send(
+      JSON.stringify({
+        error: error.message
+      })
+    );
+
   }
+});
+
+
+// ============================================================
+// START EXPRESS
+// ============================================================
+
+const port =
+  process.env.PORT || 3000;
+
+app.listen(port, function () {
+
+  console.log(
+    'Express server running on port ' + port
+  );
+
 });
