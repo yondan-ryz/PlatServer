@@ -5,10 +5,6 @@ const app = express();
 app.use(express.json({ limit: '10mb' }));
 
 
-// ============================================================
-// QC RFU
-// ============================================================
-
 app.all('/core/api/qc/rfu/Param.id', async (req, res) => {
   try {
 
@@ -17,23 +13,22 @@ app.all('/core/api/qc/rfu/Param.id', async (req, res) => {
     if (!targetUrl) {
       return res.status(500).send(
         JSON.stringify({
-          error: 'QC_RFU_URL is not configured'
+          success: false,
+          message: 'QC_RFU_URL is not configured'
         })
       );
     }
 
 
-    // Query
-    const queryString =
-      new URLSearchParams(req.query).toString();
+    // Query parameter
+    const query = new URLSearchParams(req.query).toString();
 
-    const requestUrl =
-      queryString
-        ? targetUrl + '?' + queryString
-        : targetUrl;
+    const url = query
+      ? targetUrl + '?' + query
+      : targetUrl;
 
 
-    // Header
+    // Forward header
     const headers = {};
 
     Object.keys(req.headers).forEach(function (key) {
@@ -48,8 +43,8 @@ app.all('/core/api/qc/rfu/Param.id', async (req, res) => {
     });
 
 
-    // Body
-    let body = undefined;
+    // Forward body
+    let body;
 
     if (
       req.method !== 'GET' &&
@@ -59,8 +54,8 @@ app.all('/core/api/qc/rfu/Param.id', async (req, res) => {
     }
 
 
-    // Request
-    const response = await fetch(requestUrl, {
+    // Request ke RFU
+    const response = await fetch(url, {
       method: req.method,
       headers: headers,
       body: body
@@ -68,8 +63,7 @@ app.all('/core/api/qc/rfu/Param.id', async (req, res) => {
 
 
     // Ambil response
-    const responseText =
-      await response.text();
+    const responseText = await response.text();
 
 
     // Escape response
@@ -79,23 +73,19 @@ app.all('/core/api/qc/rfu/Param.id', async (req, res) => {
 
     // Return
     res.status(response.status);
-
     res.setHeader(
       'Content-Type',
       'application/json; charset=utf-8'
     );
 
-    return res.send(
-      escapedResponse
-    );
+    return res.send(escapedResponse);
 
   } catch (error) {
 
-    console.error(error);
-
     return res.status(500).send(
       JSON.stringify({
-        error: error.message
+        success: false,
+        message: error.message
       })
     );
 
@@ -103,17 +93,4 @@ app.all('/core/api/qc/rfu/Param.id', async (req, res) => {
 });
 
 
-// ============================================================
-// START EXPRESS
-// ============================================================
-
-const port =
-  process.env.PORT || 3000;
-
-app.listen(port, function () {
-
-  console.log(
-    'Express server running on port ' + port
-  );
-
-});
+module.exports = app;
