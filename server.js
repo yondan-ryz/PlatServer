@@ -7,36 +7,51 @@ app.use(express.json({ limit: '10mb' }));
 
 
 // ======================================================
-// DYNAMIC PARAM + ID
+// DYNAMIC RFU ENDPOINT
+//
 // Contoh:
-// /core/api/qc/rfu/Test.123
-// /core/api/qc/rfu/Application.456
-// /core/api/qc/rfu/NIK.789
+// GET  /core/api/qc/rfu/12345
+// POST /core/api/qc/rfu/ABC123
+// GET  /core/api/qc/rfu/sadasdsadf
+//
+// req.params.id akan mengambil nilai terakhir tersebut.
 // ======================================================
-app.all('/core/api/qc/rfu/:param.:id', async (req, res) => {
+
+app.all('/core/api/qc/rfu/:id', async (req, res) => {
 
   try {
+
+    // ==================================================
+    // AMBIL TARGET URL DARI ENVIRONMENT VARIABLE
+    // ==================================================
 
     const targetUrl = process.env.QC_RFU_URL;
 
     if (!targetUrl) {
+
       return res.status(500).json({
         success: false,
         message: 'QC_RFU_URL is not configured'
       });
+
     }
 
 
     // ==================================================
-    // Ambil PARAM dan ID dari URL
+    // AMBIL ID DARI REQUEST
     // ==================================================
 
-    const param = req.params.param;
     const id = req.params.id;
 
 
     // ==================================================
-    // Query parameter
+    // QUERY PARAMETER
+    //
+    // Contoh:
+    // /core/api/qc/rfu/12345?nik=ABC&status=APPROVED
+    //
+    // Akan diteruskan menjadi:
+    // targetUrl?nik=ABC&status=APPROVED
     // ==================================================
 
     const query = new URLSearchParams(req.query).toString();
@@ -47,25 +62,29 @@ app.all('/core/api/qc/rfu/:param.:id', async (req, res) => {
 
 
     // ==================================================
-    // Forward header
+    // FORWARD HEADER
     // ==================================================
 
     const headers = {};
 
     Object.keys(req.headers).forEach(function (key) {
 
+      const lowerKey = key.toLowerCase();
+
       if (
-        key.toLowerCase() !== 'host' &&
-        key.toLowerCase() !== 'content-length'
+        lowerKey !== 'host' &&
+        lowerKey !== 'content-length'
       ) {
+
         headers[key] = req.headers[key];
+
       }
 
     });
 
 
     // ==================================================
-    // Forward body
+    // FORWARD BODY
     // ==================================================
 
     let body;
@@ -74,37 +93,51 @@ app.all('/core/api/qc/rfu/:param.:id', async (req, res) => {
       req.method !== 'GET' &&
       req.method !== 'HEAD'
     ) {
+
       body = JSON.stringify(req.body);
+
     }
 
 
     // ==================================================
-    // Request ke RFU
+    // REQUEST KE RFU
     // ==================================================
 
     const response = await fetch(url, {
+
       method: req.method,
+
       headers: headers,
+
       body: body
+
     });
 
 
     // ==================================================
-    // Ambil response asli
+    // AMBIL RESPONSE DARI RFU
     // ==================================================
 
     const responseText = await response.text();
 
 
     // ==================================================
-    // Escape response
+    // ESCAPE RESPONSE
+    //
+    // Contoh response asli:
+    //
+    // {"status":"APPROVED","score":850}
+    //
+    // Menjadi:
+    //
+    // "{\"status\":\"APPROVED\",\"score\":850}"
     // ==================================================
 
     const escapedResponse = JSON.stringify(responseText);
 
 
     // ==================================================
-    // Return response
+    // RETURN RESPONSE
     // ==================================================
 
     res.status(response.status);
@@ -116,26 +149,38 @@ app.all('/core/api/qc/rfu/:param.:id', async (req, res) => {
 
 
     return res.send(
+
       JSON.stringify({
+
+        // Status request
         success: response.ok,
 
-        // Param dari request
-        Param: param,
+        // HTTP status dari RFU
+        statusCode: response.status,
 
-        // ID dari request
+        // ID yang dikirim pada URL
         id: id,
 
-        // Response dari RFU dalam bentuk escaped string
+        // Response RFU dalam bentuk escaped string
         response: escapedResponse
+
       })
+
     );
 
 
   } catch (error) {
 
+    // ==================================================
+    // ERROR HANDLING
+    // ==================================================
+
     return res.status(500).json({
+
       success: false,
+
       message: error.message
+
     });
 
   }
@@ -143,4 +188,9 @@ app.all('/core/api/qc/rfu/:param.:id', async (req, res) => {
 });
 
 
+// ======================================================
+// EXPORT APP
+// ======================================================
+
 module.exports = app;
+
