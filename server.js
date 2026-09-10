@@ -14,7 +14,7 @@ app.use(express.json({ limit: '10mb' }));
 // POST /core/api/qc/rfu/123456
 // ======================================================
 
-app.all('/core/api/qc/rfu/:id', async (req, res) => {
+app.all('/internal/pega/qc-rfu/:id', async (req, res) => {
 
   try {
 
