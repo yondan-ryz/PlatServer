@@ -8,12 +8,6 @@ app.use(express.json({ limit: '10mb' }));
 
 // ======================================================
 // QC RFU HANDLER
-//
-// Logic utama / existing
-// Kedua route akan menggunakan handler ini.
-//
-// /api/qc-rfu/:id
-// /internal/pega/qc-rfu/:id
 // ======================================================
 
 async function qcRfuHandler(req, res) {
@@ -21,49 +15,41 @@ async function qcRfuHandler(req, res) {
   try {
 
     // ==================================================
-    // AMBIL ID DARI URL
+    // ID DARI URL
+    //
+    // Tetap tersedia sebagai parameter URL,
+    // tetapi TIDAK digunakan sebagai qc_rfu_id.
     // ==================================================
 
     const id = req.params.id;
 
 
     // ==================================================
-    // AMBIL QUERY PARAMETER
+    // BODY REQUEST
     // ==================================================
 
-    const query = req.query;
-
-
-    // ==================================================
-    // AMBIL BODY REQUEST
-    // ==================================================
-
-    const body = req.body;
+    const body = req.body || {};
 
 
     // ==================================================
-    // DATA HASIL REQUEST
+    // DATA RESPONSE
     //
-    // Data berasal dari request yang dikirim
+    // qc_rfu_id WAJIB mengambil dari BODY
     // ==================================================
 
     const data = {
 
-      qc_rfu_id: id,
+      qc_rfu_id: body.qc_rfu_id,
 
-      notes: body && body.notes
-        ? body.notes
-        : null,
+      notes: body.notes,
 
-      is_invalid: body && body.is_invalid
-        ? body.is_invalid
-        : false
+      is_invalid: body.is_invalid
 
     };
 
 
     // ==================================================
-    // RESPONSE EXISTING
+    // RESPONSE
     // ==================================================
 
     const responseData = {
@@ -80,7 +66,7 @@ async function qcRfuHandler(req, res) {
 
 
     // ==================================================
-    // RETURN RESPONSE
+    // RETURN
     // ==================================================
 
     return res.status(200).json(responseData);
@@ -109,19 +95,20 @@ async function qcRfuHandler(req, res) {
 // ROUTE LAMA / EXISTING
 // ======================================================
 
-app.all('/api/qc-rfu/:id', qcRfuHandler);
+app.all(
+  '/api/qc-rfu/:id',
+  qcRfuHandler
+);
 
 
 // ======================================================
-// ROUTE BARU
-//
-// URL:
-// /internal/pega/qc-rfu/:id
-//
-// Menggunakan handler yang sama dengan route lama.
+// ROUTE BARU UNTUK PEGA
 // ======================================================
 
-app.all('/internal/pega/qc-rfu/:id', qcRfuHandler);
+app.all(
+  '/internal/pega/qc-rfu/:id',
+  qcRfuHandler
+);
 
 
 // ======================================================
@@ -129,4 +116,3 @@ app.all('/internal/pega/qc-rfu/:id', qcRfuHandler);
 // ======================================================
 
 module.exports = app;
-
