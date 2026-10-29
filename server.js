@@ -4,253 +4,175 @@ const cors = require("cors");
 const { randomUUID } = require("crypto");
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = 5000;
 
 app.use(cors());
-app.use(express.json({ limit: "1mb" }));
+app.use(express.json());
 
-app.get("/", (req, res) => {
-  res.json({
-    success: true,
-    message: "Loan Financing API is running",
-    version: "1.0.0"
-  });
-});
-
-app.post("/api/loans", (req, res) => {
-  const body = req.body;
-
-  const requiredFields = [
-    "loan",
-    "customer",
-    "employment",
-    "vehicle",
-    "address",
-    "survey",
-    "documents",
-    "approval",
-    "rfu"
-  ];
-
-  const missingFields = requiredFields.filter(
-    (field) =>
-      !body ||
-      typeof body[field] !== "object" ||
-      body[field] === null ||
-      Array.isArray(body[field])
-  );
-
-  if (missingFields.length > 0) {
-    return res.status(400).json({
-      success: false,
-      message: "Invalid loan application payload",
-      errors: missingFields.map((field) => ({
-        field,
-        message: `${field} is required and must be an object`
-      }))
-    });
+const defaultData = {
+  loan: {
+    loanId: "LN-2026-001",
+    loanNumber: "APP-20261029-0001",
+    loanType: "CAR_FINANCING",
+    loanAmount: 185000000,
+    downPayment: 65000000,
+    tenor: 48,
+    interestRate: 8.5,
+    monthlyInstallment: 0,
+    applicationDate: "2026-10-29",
+    branchCode: "JKT001",
+    dealerCode: "DLR009",
+    currency: "IDR",
+    loanStatus: "RECEIVED"
+  },
+  customer: {
+    customerId: "CUST-001",
+    customerName: "Budi Santoso",
+    nik: "3174000000000001",
+    birthDate: "1992-05-15",
+    gender: "MALE",
+    maritalStatus: "MARRIED",
+    phone: "081234567890",
+    email: "budi@example.com",
+    numberOfDependents: 2
+  },
+  employment: {
+    occupation: "SOFTWARE_ENGINEER",
+    companyName: "PT Contoh Indonesia",
+    employmentType: "PERMANENT",
+    monthlyIncome: 15000000,
+    otherIncome: 1000000,
+    monthlyExpenses: 5000000,
+    workExperienceYears: 5,
+    companyAddress: "Jakarta Barat"
+  },
+  vehicle: {
+    vehicleType: "CAR",
+    brand: "Toyota",
+    model: "Avanza",
+    year: 2023,
+    color: "Silver",
+    licensePlate: "B 1234 ABC",
+    stnkNumber: "STNK-123456",
+    bpkbNumber: "BPKB-789012",
+    condition: "USED",
+    marketPrice: 250000000,
+    engineNumber: "ENG-123456",
+    chassisNumber: "CHS-789012"
+  },
+  address: {
+    ktpAddress: "Jl. Contoh No. 10",
+    domicileAddress: "Jl. Contoh No. 20",
+    city: "Jakarta Barat",
+    province: "DKI Jakarta",
+    postalCode: "11460"
+  },
+  survey: {
+    surveyId: "SUR-001",
+    surveyStatus: "PENDING",
+    surveyDate: null,
+    surveyResult: null,
+    surveyNotes: "",
+    surveyOfficer: null
+  },
+  documents: {
+    ktpDocument: "DOC-KTP-001",
+    stnkDocument: "DOC-STNK-001",
+    bpkbDocument: "DOC-BPKB-001",
+    documentsVerified: false,
+    missingDocuments: ["PROOF_OF_INCOME"]
+  },
+  approval: {
+    creditScore: null,
+    approvalStatus: "PENDING",
+    approvedBy: null,
+    approvalDate: null,
+    rejectionReason: null
+  },
+  rfu: {
+    isRfu: true,
+    rfuCategory: "INCOMPLETE_DOCUMENT",
+    rfuNotes: "Mohon lengkapi dokumen bukti penghasilan.",
+    requestedAt: "2026-10-29",
+    requestedBy: "SYSTEM"
   }
+};
 
+function successResponse(req, res) {
+  const startTime = Date.now();
+  const data = structuredClone(defaultData);
+
+  // Override default values with supplied fields.
   if (
-    typeof body.customer.customerName !== "string" ||
-    !body.customer.customerName.trim()
+    req.body &&
+    typeof req.body === "object" &&
+    !Array.isArray(req.body)
   ) {
-    return res.status(400).json({
-      success: false,
-      message: "Customer name is required",
-      errors: [
-        {
-          field: "customer.customerName",
-          message: "Must be a non-empty string"
-        }
-      ]
-    });
-  }
+    for (const section of Object.keys(data)) {
+      const incoming = req.body[section];
 
-  if (
-    typeof body.loan.loanAmount !== "number" ||
-    !Number.isFinite(body.loan.loanAmount) ||
-    body.loan.loanAmount <= 0
-  ) {
-    return res.status(400).json({
-      success: false,
-      message: "Invalid loan amount",
-      errors: [
-        {
-          field: "loan.loanAmount",
-          message: "Must be a number greater than zero"
-        }
-      ]
-    });
-  }
-
-  const timestamp = new Date().toISOString();
-  const requestId = randomUUID();
-  const loanId = randomUUID();
-
-  const responseData = {
-    loan: {
-      loanId: body.loan.loanId || loanId,
-      loanNumber: body.loan.loanNumber || `LN-${Date.now()}`,
-      loanType: body.loan.loanType,
-      loanAmount: body.loan.loanAmount,
-      downPayment: body.loan.downPayment,
-      tenor: body.loan.tenor,
-      interestRate: body.loan.interestRate,
-      monthlyInstallment: body.loan.monthlyInstallment,
-      applicationDate: body.loan.applicationDate,
-      branchCode: body.loan.branchCode,
-      dealerCode: body.loan.dealerCode,
-      currency: body.loan.currency || "IDR",
-      loanStatus: "RECEIVED"
-    },
-
-    customer: {
-      customerId: body.customer.customerId || `CUST-${randomUUID()}`,
-      customerName: body.customer.customerName,
-      nik: body.customer.nik,
-      birthDate: body.customer.birthDate,
-      gender: body.customer.gender,
-      maritalStatus: body.customer.maritalStatus,
-      phone: body.customer.phone,
-      email: body.customer.email,
-      numberOfDependents: body.customer.numberOfDependents
-    },
-
-    employment: {
-      occupation: body.employment.occupation,
-      companyName: body.employment.companyName,
-      employmentType: body.employment.employmentType,
-      monthlyIncome: body.employment.monthlyIncome,
-      otherIncome: body.employment.otherIncome,
-      monthlyExpenses: body.employment.monthlyExpenses,
-      workExperienceYears: body.employment.workExperienceYears,
-      companyAddress: body.employment.companyAddress
-    },
-
-    vehicle: {
-      vehicleType: body.vehicle.vehicleType,
-      brand: body.vehicle.brand,
-      model: body.vehicle.model,
-      year: body.vehicle.year,
-      color: body.vehicle.color,
-      licensePlate: body.vehicle.licensePlate,
-      stnkNumber: body.vehicle.stnkNumber,
-      bpkbNumber: body.vehicle.bpkbNumber,
-      condition: body.vehicle.condition,
-      marketPrice: body.vehicle.marketPrice,
-      engineNumber: body.vehicle.engineNumber,
-      chassisNumber: body.vehicle.chassisNumber
-    },
-
-    address: {
-      ktpAddress: body.address.ktpAddress,
-      domicileAddress: body.address.domicileAddress,
-      city: body.address.city,
-      province: body.address.province,
-      postalCode: body.address.postalCode
-    },
-
-    survey: {
-      surveyId: body.survey.surveyId || `SUR-${randomUUID()}`,
-      surveyStatus: body.survey.surveyStatus || "PENDING",
-      surveyDate: body.survey.surveyDate ?? null,
-      surveyResult: body.survey.surveyResult ?? null,
-      surveyNotes: body.survey.surveyNotes || "",
-      surveyOfficer: body.survey.surveyOfficer ?? null
-    },
-
-    documents: {
-      ktpDocument: body.documents.ktpDocument ?? null,
-      stnkDocument: body.documents.stnkDocument ?? null,
-      bpkbDocument: body.documents.bpkbDocument ?? null,
-      documentsVerified: body.documents.documentsVerified ?? false,
-      missingDocuments: body.documents.missingDocuments || []
-    },
-
-    approval: {
-      creditScore: body.approval.creditScore ?? null,
-      approvalStatus: body.approval.approvalStatus || "PENDING",
-      approvedBy: body.approval.approvedBy ?? null,
-      approvalDate: body.approval.approvalDate ?? null,
-      rejectionReason: body.approval.rejectionReason ?? null
-    },
-
-    rfu: {
-      isRfu: body.rfu.isRfu ?? false,
-      rfuCategory: body.rfu.rfuCategory ?? null,
-      rfuNotes: body.rfu.rfuNotes || "",
-      requestedAt: body.rfu.requestedAt ?? null,
-      requestedBy: body.rfu.requestedBy || "SYSTEM"
+      if (
+        incoming &&
+        typeof incoming === "object" &&
+        !Array.isArray(incoming)
+      ) {
+        data[section] = {
+          ...data[section],
+          ...incoming
+        };
+      }
     }
-  };
-
-  const warnings = [];
-
-  if (
-    Array.isArray(responseData.documents.missingDocuments) &&
-    responseData.documents.missingDocuments.length > 0
-  ) {
-    warnings.push({
-      code: "INCOMPLETE_DOCUMENT",
-      message: "Pengajuan membutuhkan dokumen tambahan."
-    });
   }
 
-  const response = {
+  return res.status(200).json({
     success: true,
     message: "Loan application berhasil diterima",
-    data: responseData,
+    data,
     metadata: {
-      requestId,
-      correlationId: `corr-${randomUUID()}`,
+      requestId: randomUUID(),
+      correlationId: randomUUID(),
       source: "EXPRESS_API",
       environment: process.env.NODE_ENV || "DEVELOPMENT",
       apiVersion: "1.0.0",
-      timestamp,
-      processingTimeMs: 0
+      timestamp: new Date().toISOString(),
+      processingTimeMs: Date.now() - startTime
     },
     errors: [],
-    warnings
-  };
+    warnings: data.documents.missingDocuments.length
+      ? [
+          {
+            code: "INCOMPLETE_DOCUMENT",
+            message: "Pengajuan membutuhkan dokumen tambahan."
+          }
+        ]
+      : []
+  });
+}
 
-  return res.status(201).json(response);
-});
+// Always return a successful response.
+app.get("/api/loans", successResponse);
+app.post("/api/loans", successResponse);
 
-// Invalid JSON handler
-app.use((err, req, res, next) => {
-  if (err instanceof SyntaxError && err.status === 400 && "body" in err) {
-    return res.status(400).json({
-      success: false,
-      message: "Invalid JSON payload",
-      errors: [
-        {
-          field: "body",
-          message: "Request body must contain valid JSON"
-        }
-      ]
-    });
-  }
-
-  if (err.type === "entity.too.large") {
-    return res.status(413).json({
-      success: false,
-      message: "Request payload too large"
-    });
-  }
-
-  return next(err);
-});
-
-// 404 handler
+// Fallback for other endpoints.
 app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: "Endpoint not found",
-    path: req.originalUrl
+  return res.status(200).json({
+    success: true,
+    message: "Request berhasil diproses",
+    data: {},
+    metadata: {
+      requestId: randomUUID(),
+      timestamp: new Date().toISOString()
+    },
+    errors: [],
+    warnings: []
   });
 });
 
+// Handle malformed JSON with a successful default response.
+app.use((err, req, res, next) => {
+  return successResponse({ ...req, body: {} }, res);
+});
+
 app.listen(PORT, () => {
-  console.log(`Loan API running at http://localhost:${PORT}`);
+  console.log(`Server running at http://localhost:${PORT}`);
 });
