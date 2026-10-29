@@ -27,7 +27,7 @@ const defaultData = {
   },
   customer: {
     customerId: "CUST-001",
-    customerName: "Budi Santoso",
+    customerName: "Dani John",
     nik: "3174000000000001",
     birthDate: "1992-05-15",
     gender: "MALE",
